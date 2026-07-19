@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leafs Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto p-6 max-w-6xl">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-blue-400">🍁 Leafs Performance Tracker</h1>
+        </header>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <select id="seasonFilter" onchange="fetchGames()" class="bg-gray-800 p-2 rounded border border-gray-700">
+                <option value="">All Seasons</option>
+            </select>
+            <select id="typeFilter" onchange="fetchGames()" class="bg-gray-800 p-2 rounded border border-gray-700">
+                <option value="">All Formats</option>
+                <option value="1">Preseason</option>
+                <option value="2" selected>Regular Season</option>
+                <option value="3">Playoffs</option>
+            </select>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4 mb-8">
+            <div class="bg-gray-800 p-4 rounded text-center"><span class="text-xl font-bold text-green-400" id="statWins">0</span><p class="text-xs uppercase">Wins</p></div>
+            <div class="bg-gray-800 p-4 rounded text-center"><span class="text-xl font-bold text-red-400" id="statLosses">0</span><p class="text-xs uppercase">Losses</p></div>
+            <div class="bg-gray-800 p-4 rounded text-center"><span class="text-xl font-bold text-amber-500" id="statOTL">0</span><p class="text-xs uppercase">OTL</p></div>
+            <div class="bg-gray-800 p-4 rounded text-center"><span class="text-xl font-bold text-blue-400" id="statPoints">0</span><p class="text-xs uppercase">Points</p></div>
+        </div>
+
+        <div class="bg-gray-800 rounded overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-950 text-gray-400 text-xs uppercase">
+                    <tr><th class="p-3">GM</th><th class="p-3">Date</th><th class="p-3">Opponent</th><th class="p-3">Score</th><th class="p-3">Result</th></tr>
+                </thead>
+                <tbody id="gamesTableBody" class="divide-y divide-gray-700"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function fetchGames() {
+            const season = document.getElementById('seasonFilter').value;
+            const gameType = document.getElementById('typeFilter').value;
+            
+            // Build query params
+            const query = new URLSearchParams();
+            if (season) query.append('season', season);
+            if (gameType) query.append('gameType', gameType);
+
+            const res = await fetch(`/api/games?${query.toString()}`);
+            const games = await res.json();
+            render(games);
+        }
+
+        function render(games) {
+            const tbody = document.getElementById('gamesTableBody');
+            tbody.innerHTML = '';
+            let w=0, l=0, ot=0;
+
+            games.forEach(g => {
+                if (g.result === "Win") w++; else if (g.result === "Loss") l++; else if (g.result === "OT Loss") ot++;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-750">
+                        <td class="p-3">${g.gameNumber}</td>
+                        <td class="p-3">${g.date}</td>
+                        <td class="p-3">${g.opponent}</td>
+                        <td class="p-3">${g.leafsScore}-${g.opponentScore}</td>
+                        <td class="p-3"><span class="px-2 py-1 rounded text-xs ${g.result === 'Win' ? 'bg-green-900' : 'bg-red-900'}">${g.result}</span></td>
+                    </tr>`;
+            });
+            document.getElementById('statWins').innerText = w;
+            document.getElementById('statLosses').innerText = l;
+            document.getElementById('statOTL').innerText = ot;
+            document.getElementById('statPoints').innerText = (w * 2) + (ot * 1);
+        }
+
+        fetchGames();
+
+        async function populateSeasonDropdown() {
+    const select = document.getElementById('seasonFilter');
+    
+    // Fetch unique seasons from your database API
+    const response = await fetch('/api/seasons');
+    const seasons = await response.json();
+    
+    seasons.forEach(season => {
+        const option = document.createElement('option');
+        option.value = season;
+        // Formats "20232024" to "2023-24"
+        option.textContent = `${season.slice(0, 4)}-${season.slice(6)}`;
+        select.appendChild(option);
+    });
+}
+
+// Call this when the page loads
+populateSeasonDropdown();
+    </script>
+</body>
+</html>
