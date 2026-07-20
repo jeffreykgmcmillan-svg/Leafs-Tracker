@@ -9,7 +9,7 @@ app.use(express.json());
 
 // Point Express to your public folder. 
 // This automatically serves index.html at http://localhost:3000/
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(import.meta.dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
 let db;
