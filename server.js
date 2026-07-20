@@ -1,8 +1,8 @@
-const express = require('express');
-const axios = require('axios');
-const sqlite3 = require('sqlite3');
-const { open } = require('sqlite');
-const path = require('path');
+import express from 'express';
+import axios from 'axios';
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import path from 'node:path';
 
 const app = express();
 app.use(express.json());
